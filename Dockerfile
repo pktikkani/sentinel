@@ -79,7 +79,8 @@ RUN FEROX_VERSION=$(curl -s https://api.github.com/repos/epi052/feroxbuster/rele
 # ─── Python-based tools ───
 RUN python3 -m venv /opt/pytools \
     && /opt/pytools/bin/pip install --no-cache-dir \
-       wafw00f arjun paramspider sqlmap commix sslyze \
+       wafw00f arjun sqlmap commix sslyze \
+       git+https://github.com/devanshbatham/paramspider.git \
     && for bin in wafw00f arjun paramspider sqlmap commix sslyze; do \
          ln -sf /opt/pytools/bin/$bin /usr/local/bin/$bin; \
        done
