@@ -14,20 +14,21 @@ WORKDIR /build/pentest-audit
 COPY pentest-audit/package.json pentest-audit/package-lock.json* pentest-audit/tsup.config.ts pentest-audit/tsconfig.json ./
 COPY pentest-audit/src ./src
 COPY pentest-audit/bin ./bin
-RUN npm ci --ignore-scripts && npx tsup
+RUN npm ci && npx tsup
 
 # ─── Stage 2: Build Sentinel ───
 FROM node:22-bookworm-slim AS build-app
-WORKDIR /build
-
-COPY --from=build-cli /build/pentest-audit /build/pentest-audit
-
 WORKDIR /build/sentinel
-COPY sentinel/package.json sentinel/package-lock.json* ./
 
-# Rewrite the file: reference for Docker context
-RUN sed -i 's|"file:../pentest-audit"|"file:/build/pentest-audit"|' package.json
+# Copy sentinel package files, remove the file: dep (we'll link it manually)
+COPY sentinel/package.json sentinel/package-lock.json* ./
+RUN sed -i '/"pentest-audit"/d' package.json
 RUN npm install --ignore-scripts
+
+# Copy the built pentest-audit into node_modules directly
+COPY --from=build-cli /build/pentest-audit/dist ./node_modules/pentest-audit/dist
+COPY --from=build-cli /build/pentest-audit/package.json ./node_modules/pentest-audit/package.json
+COPY --from=build-cli /build/pentest-audit/node_modules ./node_modules/pentest-audit/node_modules
 
 COPY sentinel/ .
 
@@ -101,12 +102,7 @@ RUN mkdir -p /usr/share/seclists/Discovery/Web-Content \
 # ─── Application ───
 WORKDIR /app
 
-# Copy pentest-audit (library)
-COPY --from=build-app /build/pentest-audit/dist /app/pentest-audit/dist
-COPY --from=build-app /build/pentest-audit/package.json /app/pentest-audit/package.json
-COPY --from=build-app /build/pentest-audit/node_modules /app/pentest-audit/node_modules
-
-# Copy Sentinel app
+# Copy Sentinel app (pentest-audit is already inside node_modules/)
 COPY --from=build-app /build/sentinel/.next /app/.next
 COPY --from=build-app /build/sentinel/public /app/public
 COPY --from=build-app /build/sentinel/node_modules /app/node_modules
@@ -115,9 +111,6 @@ COPY --from=build-app /build/sentinel/generated /app/generated
 COPY --from=build-app /build/sentinel/prisma /app/prisma
 COPY --from=build-app /build/sentinel/next.config.ts /app/next.config.ts
 COPY --from=build-app /build/sentinel/tsconfig.json /app/tsconfig.json
-
-# Ensure pentest-audit link works
-RUN cd /app && npm link ./pentest-audit 2>/dev/null || true
 
 ENV NODE_ENV=production
 ENV PORT=3000
