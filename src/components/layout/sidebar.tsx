@@ -10,11 +10,13 @@ import {
   Settings,
   LogOut,
   Wrench,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Repositories", icon: LayoutDashboard },
+  { href: "/dashboard/url-scan", label: "URL Scanner", icon: Globe },
   { href: "/dashboard/scans", label: "Scan History", icon: History },
   { href: "/dashboard/tools", label: "Tools", icon: Wrench },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },

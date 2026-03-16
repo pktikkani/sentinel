@@ -20,17 +20,18 @@ RUN npm ci && npx tsup
 FROM node:22-bookworm-slim AS build-app
 WORKDIR /build/sentinel
 
-# Copy sentinel package files, remove the file: dep (we'll link it manually)
-COPY sentinel/package.json sentinel/package-lock.json* ./
-RUN sed -i '/"pentest-audit"/d' package.json
+# Copy sentinel source first
+COPY sentinel/ .
+
+# Remove the file: dep and install remaining dependencies
+RUN node -e "const p=JSON.parse(require('fs').readFileSync('package.json','utf8')); delete p.dependencies['pentest-audit']; require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
+RUN rm -rf node_modules
 RUN npm install --ignore-scripts
 
-# Copy the built pentest-audit into node_modules directly
+# Copy the built pentest-audit into node_modules
 COPY --from=build-cli /build/pentest-audit/dist ./node_modules/pentest-audit/dist
 COPY --from=build-cli /build/pentest-audit/package.json ./node_modules/pentest-audit/package.json
 COPY --from=build-cli /build/pentest-audit/node_modules ./node_modules/pentest-audit/node_modules
-
-COPY sentinel/ .
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -52,25 +53,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV GOPATH=/opt/go
 ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 
-RUN curl -fsSL https://go.dev/dl/go1.24.3.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
+RUN curl -fsSL https://go.dev/dl/go1.26.1.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
     && go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest \
     && go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
     && go install github.com/projectdiscovery/httpx/cmd/httpx@latest \
     && go install github.com/ffuf/ffuf/v2@latest \
     && go install github.com/OJ/gobuster/v3@latest \
-    && go install github.com/trufflesecurity/trufflehog/v3@latest \
-    && go install github.com/gitleaks/gitleaks/v8/cmd/gitleaks@latest \
+    # Gitleaks + TruffleHog require clone+build
+    && git clone --depth 1 https://github.com/gitleaks/gitleaks.git /tmp/gitleaks \
+    && cd /tmp/gitleaks && go build -o /opt/go/bin/gitleaks . && cd / && rm -rf /tmp/gitleaks \
+    && git clone --depth 1 https://github.com/trufflesecurity/trufflehog.git /tmp/trufflehog \
+    && cd /tmp/trufflehog && go build -o /opt/go/bin/trufflehog . && cd / && rm -rf /tmp/trufflehog \
     # Keep only binaries, remove Go SDK + caches
     && cp /opt/go/bin/* /usr/local/bin/ \
     && rm -rf /usr/local/go /opt/go /root/.cache/go-build
 
-# ─── Rust-based tools ───
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal \
-    && . /root/.cargo/env \
-    && cargo install feroxbuster \
-    && cp /root/.cargo/bin/feroxbuster /usr/local/bin/ \
-    && rustup self uninstall -y \
-    && rm -rf /root/.cargo
+# ─── Feroxbuster (prebuilt binary) ───
+RUN FEROX_VERSION=$(curl -s https://api.github.com/repos/epi052/feroxbuster/releases/latest | grep tag_name | cut -d'"' -f4) \
+    && curl -fsSL "https://github.com/epi052/feroxbuster/releases/download/${FEROX_VERSION}/x86_64-linux-feroxbuster.zip" \
+       -o /tmp/ferox.zip \
+    && unzip /tmp/ferox.zip -d /usr/local/bin/ \
+    && chmod +x /usr/local/bin/feroxbuster \
+    && rm /tmp/ferox.zip
 
 # ─── Python-based tools ───
 RUN python3 -m venv /opt/pytools \
@@ -104,7 +108,6 @@ WORKDIR /app
 
 # Copy Sentinel app (pentest-audit is already inside node_modules/)
 COPY --from=build-app /build/sentinel/.next /app/.next
-COPY --from=build-app /build/sentinel/public /app/public
 COPY --from=build-app /build/sentinel/node_modules /app/node_modules
 COPY --from=build-app /build/sentinel/package.json /app/package.json
 COPY --from=build-app /build/sentinel/generated /app/generated
@@ -113,6 +116,7 @@ COPY --from=build-app /build/sentinel/next.config.ts /app/next.config.ts
 COPY --from=build-app /build/sentinel/tsconfig.json /app/tsconfig.json
 
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-semi-space-size=2"
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 

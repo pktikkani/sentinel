@@ -388,7 +388,8 @@ export const ModelName = {
   Session: 'Session',
   User: 'User',
   VerificationToken: 'VerificationToken',
-  Scan: 'Scan'
+  Scan: 'Scan',
+  UrlScan: 'UrlScan'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -404,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "account" | "session" | "user" | "verificationToken" | "scan"
+    modelProps: "account" | "session" | "user" | "verificationToken" | "scan" | "urlScan"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -778,6 +779,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UrlScan: {
+      payload: Prisma.$UrlScanPayload<ExtArgs>
+      fields: Prisma.UrlScanFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UrlScanFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UrlScanFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        findFirst: {
+          args: Prisma.UrlScanFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UrlScanFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        findMany: {
+          args: Prisma.UrlScanFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>[]
+        }
+        create: {
+          args: Prisma.UrlScanCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        createMany: {
+          args: Prisma.UrlScanCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UrlScanCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>[]
+        }
+        delete: {
+          args: Prisma.UrlScanDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        update: {
+          args: Prisma.UrlScanUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        deleteMany: {
+          args: Prisma.UrlScanDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UrlScanUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UrlScanUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>[]
+        }
+        upsert: {
+          args: Prisma.UrlScanUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UrlScanPayload>
+        }
+        aggregate: {
+          args: Prisma.UrlScanAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUrlScan>
+        }
+        groupBy: {
+          args: Prisma.UrlScanGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UrlScanGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UrlScanCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UrlScanCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -885,6 +960,24 @@ export const ScanScalarFieldEnum = {
 } as const
 
 export type ScanScalarFieldEnum = (typeof ScanScalarFieldEnum)[keyof typeof ScanScalarFieldEnum]
+
+
+export const UrlScanScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  targets: 'targets',
+  profile: 'profile',
+  status: 'status',
+  result: 'result',
+  findings: 'findings',
+  checks: 'checks',
+  stats: 'stats',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UrlScanScalarFieldEnum = (typeof UrlScanScalarFieldEnum)[keyof typeof UrlScanScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1110,6 +1203,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   verificationToken?: Prisma.VerificationTokenOmit
   scan?: Prisma.ScanOmit
+  urlScan?: Prisma.UrlScanOmit
 }
 
 /* Types for Logging */

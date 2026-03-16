@@ -42,6 +42,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   scans         Scan[]
+  urlScans      UrlScan[]
 }
 
 model VerificationToken {
@@ -73,4 +74,22 @@ model Scan {
 
   @@index([userId])
   @@index([repoOwner, repoName])
+}
+
+model UrlScan {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targets   String[]
+  profile   String   @default("active")
+  status    String   @default("queued")
+  result    Json?
+  findings  Json?
+  checks    Json?
+  stats     Json?
+  error     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

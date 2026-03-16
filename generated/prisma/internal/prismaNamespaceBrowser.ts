@@ -55,7 +55,8 @@ export const ModelName = {
   Session: 'Session',
   User: 'User',
   VerificationToken: 'VerificationToken',
-  Scan: 'Scan'
+  Scan: 'Scan',
+  UrlScan: 'UrlScan'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -142,6 +143,24 @@ export const ScanScalarFieldEnum = {
 } as const
 
 export type ScanScalarFieldEnum = (typeof ScanScalarFieldEnum)[keyof typeof ScanScalarFieldEnum]
+
+
+export const UrlScanScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  targets: 'targets',
+  profile: 'profile',
+  status: 'status',
+  result: 'result',
+  findings: 'findings',
+  checks: 'checks',
+  stats: 'stats',
+  error: 'error',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UrlScanScalarFieldEnum = (typeof UrlScanScalarFieldEnum)[keyof typeof UrlScanScalarFieldEnum]
 
 
 export const SortOrder = {

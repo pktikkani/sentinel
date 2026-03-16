@@ -15,8 +15,6 @@ import {
   Scale,
   FileCheck,
   Repeat,
-  Globe,
-  Target,
   AlertTriangle,
   Wrench,
   Check,
@@ -92,9 +90,6 @@ export function RepoDetail({ owner, repo }: RepoDetailProps) {
   const [compliance, setCompliance] = useState<string[]>([]);
   const [multiPass, setMultiPass] = useState(true);
   const [maxPass2Findings, setMaxPass2Findings] = useState(30);
-  const [urlScan, setUrlScan] = useState(false);
-  const [targets, setTargets] = useState<string>("");
-
   // External tools
   const [runExternalTools, setRunExternalTools] = useState(false);
   const [tools, setTools] = useState<ToolInfo[]>([]);
@@ -181,11 +176,6 @@ export function RepoDetail({ owner, repo }: RepoDetailProps) {
   async function handleStartScan() {
     setStarting(true);
     try {
-      const targetsList = targets
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-
       const res = await fetch("/api/scans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -204,8 +194,6 @@ export function RepoDetail({ owner, repo }: RepoDetailProps) {
             compliance,
             multiPass,
             maxPass2Findings,
-            urlScan,
-            targets: targetsList,
             runExternalTools,
             selectedTools: runExternalTools ? selectedTools : [],
             toolTimeout,
@@ -361,7 +349,6 @@ export function RepoDetail({ owner, repo }: RepoDetailProps) {
             <ToggleOption label="SCA" icon={<Package className="w-3 h-3" />} enabled={sca} onToggle={() => setSca(!sca)} />
             <ToggleOption label="License Check" icon={<Scale className="w-3 h-3" />} enabled={licenseCheck} onToggle={() => setLicenseCheck(!licenseCheck)} />
             <ToggleOption label="Multi-Pass" icon={<Repeat className="w-3 h-3" />} enabled={multiPass} onToggle={() => setMultiPass(!multiPass)} />
-            <ToggleOption label="URL Scan" icon={<Globe className="w-3 h-3" />} enabled={urlScan} onToggle={() => setUrlScan(!urlScan)} />
             <ToggleOption label="Run Tools" icon={<Wrench className="w-3 h-3" />} enabled={runExternalTools} onToggle={() => setRunExternalTools(!runExternalTools)} />
           </div>
 
@@ -392,19 +379,6 @@ export function RepoDetail({ owner, repo }: RepoDetailProps) {
                   value={maxPass2Findings}
                   onChange={(e) => setMaxPass2Findings(Number(e.target.value))}
                   className="w-full h-1.5 mt-2 rounded-full appearance-none bg-zinc-200 dark:bg-sentinel-800/50 accent-sentinel-500"
-                />
-              </div>
-            )}
-
-            {urlScan && (
-              <div className="col-span-2">
-                <ConfigLabel icon={<Target className="w-3 h-3" />} text="Targets (comma-separated)" />
-                <input
-                  type="text"
-                  value={targets}
-                  onChange={(e) => setTargets(e.target.value)}
-                  placeholder="https://example.com, https://api.example.com"
-                  className="w-full px-2.5 py-1.5 rounded-md bg-zinc-50 dark:bg-sentinel-950 border border-zinc-200 dark:border-sentinel-800/50 text-[12px] text-zinc-700 dark:text-zinc-300 font-mono focus:outline-none focus:border-sentinel-500 dark:focus:border-sentinel-600 placeholder:text-zinc-400 dark:placeholder:text-zinc-700"
                 />
               </div>
             )}

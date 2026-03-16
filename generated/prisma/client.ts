@@ -66,3 +66,8 @@ export type VerificationToken = Prisma.VerificationTokenModel
  * 
  */
 export type Scan = Prisma.ScanModel
+/**
+ * Model UrlScan
+ * 
+ */
+export type UrlScan = Prisma.UrlScanModel
