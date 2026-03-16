@@ -19,7 +19,7 @@ AI-powered security intelligence for your code. Sentinel is a web dashboard that
 ### Prerequisites
 
 - Node.js 20+
-- A PostgreSQL database (Neon serverless recommended)
+- A PostgreSQL database (or use Docker Compose which bundles one)
 - GitHub OAuth App credentials
 - Anthropic API key (for Claude-powered analysis)
 
@@ -67,27 +67,51 @@ Open [http://localhost:3000](http://localhost:3000), sign in with GitHub, and st
 
 ## Docker Deployment
 
-The Dockerfile builds both `pentest-audit` and Sentinel, and installs all 25+ external security tools. Build from the **parent directory** containing both repos:
+Docker Compose spins up Sentinel + PostgreSQL. Clone both repos side by side:
 
-```bash
-# Directory structure:
-# parent/
-#   pentest-audit/
-#   sentinel/
-
-cd parent
-docker build -f sentinel/Dockerfile -t sentinel .
-docker run -p 3000:3000 --env-file sentinel/.env sentinel
+```
+parent/
+  pentest-audit/
+  sentinel/
 ```
 
-Or use Docker Compose:
+Create a `.env` file in `sentinel/`:
+
+```env
+AUTH_SECRET="run: openssl rand -base64 32"
+AUTH_GITHUB_ID="your-github-oauth-app-id"
+AUTH_GITHUB_SECRET="your-github-oauth-app-secret"
+ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+No `DATABASE_URL` needed — Docker Compose provides a bundled PostgreSQL automatically.
+
+### With security tools (full image)
+
+Includes all 25+ external tools (Nuclei, Nmap, SQLMap, etc.). Takes longer to build but enables the full tool suite.
 
 ```bash
 cd sentinel
-docker compose up --build
+docker compose up --build -d
 ```
 
-The Docker image includes: Nuclei, Subfinder, httpx, Nmap, FFuf, Gobuster, Feroxbuster, TruffleHog, Gitleaks, TestSSL, Nikto, Dalfox, WhatWeb, Wafw00f, Arjun, ParamSpider, SQLMap, Hydra, Commix, SSLyze, WPScan, and SecLists wordlists.
+### Without security tools (lightweight)
+
+Just the UI + AI code analysis + built-in URL scanner. Much faster build.
+
+```bash
+cd sentinel
+docker compose build --build-arg INSTALL_TOOLS=false sentinel
+docker compose up -d
+```
+
+### Using an external database (RDS, Neon, etc.)
+
+Add `DATABASE_URL` to your `.env` file and remove the `db` service from `docker-compose.yml`. Prisma auto-migrates on startup — works with any PostgreSQL instance.
+
+### Included security tools
+
+Nuclei, Subfinder, httpx, Nmap, FFuf, Gobuster, Feroxbuster, TruffleHog, Gitleaks, TestSSL, Nikto, Dalfox, WhatWeb, Wafw00f, Arjun, ParamSpider, SQLMap, Hydra, Commix, SSLyze, WPScan, and SecLists wordlists.
 
 ## Architecture
 
@@ -116,7 +140,7 @@ sentinel/
 
 - **Framework**: Next.js 16 (App Router, React 19)
 - **Auth**: NextAuth v5 (GitHub OAuth)
-- **Database**: PostgreSQL via Prisma + Neon serverless driver
+- **Database**: PostgreSQL via Prisma 7
 - **Scanning Engine**: pentest-audit (local library)
 - **AI**: Anthropic Claude API
 - **Styling**: Tailwind CSS v4
